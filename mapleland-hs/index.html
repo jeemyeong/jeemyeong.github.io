@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#111620" />
+  <meta name="description" content="메이플랜드 심매미 경험치 효율 계산기. 격수와 심매미의 레벨을 입력하면 솔플 대비 효율, 경험치 배분, 손익분기점을 계산합니다." />
+  <title>심매미 계산기 | 메이플랜드 경험치 효율</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0c1018;
+      --panel: #141b28;
+      --panel2: #192231;
+      --border: #2b3648;
+      --text: #f5f7fa;
+      --muted: #96a5bb;
+      --subtle: #6f819b;
+      --mint: #72e3bb;
+      --mint-deep: #255b50;
+      --coral: #f6a08b;
+      --blue: #a1b9ff;
+      --shadow: 0 25px 70px rgba(0, 0, 0, 0.28);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      min-height: 100vh; margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", "Segoe UI", sans-serif;
+      background: radial-gradient(ellipse 720px 560px at 88% -8%, rgba(77, 144, 151, .19), transparent 73%), radial-gradient(ellipse 900px 500px at -20% 95%, rgba(82, 98, 143, .13), transparent 70%), var(--bg);
+      color: var(--text); line-height: 1.5; letter-spacing: -.02em;
+    }
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    button:focus-visible, input:focus-visible { outline: 2px solid var(--mint); outline-offset: 3px; }
+    ::selection { background: #377d6c; color: white; }
+    .wrap { max-width: 1080px; margin: 0 auto; padding: 34px 26px 62px; }
+    header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 65px; gap: 16px; }
+    .brand { display: flex; align-items: center; gap: 11px; text-decoration: none; color: var(--text); }
+    .logo { width: 36px; height: 36px; background: linear-gradient(135deg, var(--mint), #87aedb); color: #0e2025; display: grid; place-items: center; border-radius: 11px; font-weight: 900; font-size: 18px; box-shadow: 0 8px 22px #72e3bb22; }
+    .brand-name { font-weight: 850; font-size: 14px; letter-spacing: .04em; }
+    .brand-sub { display: block; color: var(--muted); font-size: 10px; font-weight: 650; letter-spacing: .13em; }
+    .header-meta { color: var(--subtle); text-transform: uppercase; letter-spacing: .15em; font-weight: 750; font-size: 10px; }
+    .top { margin-bottom: 32px; }
+    .eyebrow { color: var(--mint); font-size: 11px; font-weight: 800; letter-spacing: .17em; text-transform: uppercase; display: inline-flex; gap: 9px; align-items: center; }
+    .eyebrow:before { content:""; width: 6px; height: 6px; border-radius: 50%; background: var(--mint); box-shadow: 0 0 16px #72e3bb77; }
+    h1 { font-size: clamp(34px, 5.4vw, 60px); line-height: 1.16; letter-spacing: -.065em; margin: 13px 0 12px; font-weight: 850; }
+    h1 span { color: var(--mint); }
+    .lead { font-size: 15px; color: var(--muted); margin: 0; }
+    .layout { display: grid; grid-template-columns: minmax(0, .93fr) minmax(0, 1.07fr); gap: 17px; align-items: stretch; }
+    .panel { border: 1px solid var(--border); background: linear-gradient(145deg, rgba(24, 33, 47, .96), rgba(17, 23, 34, .98)); border-radius: 20px; padding: 28px; box-shadow: var(--shadow); min-width: 0; }
+    .panel-title { font-size: 15px; font-weight: 800; margin: 0; }
+    .panel-desc { color: var(--muted); font-size: 12px; margin: 5px 0 27px; }
+    .field-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 10px; }
+    label { font-size: 13px; font-weight: 750; }
+    .variable { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--subtle); font-size: 12px; }
+    .num-wrap { display: grid; grid-template-columns: 42px 1fr 42px; align-items: center; background: #0f1621; border: 1px solid #364357; border-radius: 12px; height: 70px; overflow: hidden; }
+    .step { background: none; border: 0; height: 100%; color: var(--muted); font-size: 22px; transition: color .2s, background .2s; }
+    .step:hover { color: var(--mint); background: #1d2b35; }
+    .level { width: 100%; background: none; border: 0; outline: none; text-align: center; color: white; font-size: 34px; font-weight: 850; letter-spacing: -.05em; appearance: textfield; -moz-appearance: textfield; }
+    .level::-webkit-inner-spin-button, .level::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+    .level:focus-visible { outline: none; color: var(--mint); }
+    .field { margin-bottom: 22px; }
+    .presets-label { color: var(--subtle); font-size: 11px; margin: 25px 0 10px; font-weight: 700; }
+    .presets { display:flex; flex-wrap: wrap; gap: 7px; }
+    .preset { color: #c9d5e5; background: #222d3c; border: 1px solid #344257; padding: 8px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; }
+    .preset:hover, .preset.active { background: #263f3e; color: var(--mint); border-color: #508a7d; }
+    .notice { margin-top: 23px; background: #1a2c35; border: 1px solid #2e4c51; border-radius: 10px; padding: 12px 14px; font-size: 11px; line-height: 1.7; color: #b7cbd0; display: flex; gap: 9px; }
+    .notice .i { flex: 0 0 auto; font-weight: 850; color: var(--mint); }
+    .result { position: relative; overflow: hidden; background: linear-gradient(150deg, #1b3034 0%, #19242f 53%, #161d2b 100%); border-color: #365651; }
+    .result:before { content:""; position: absolute; width: 275px; height: 275px; right: -110px; top: -120px; background: radial-gradient(circle, #7feacb22 0%, transparent 68%); pointer-events: none; }
+    .result-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 29px; }
+    .pill { border: 1px solid #4e8d7c; background: #23493f; padding: 6px 11px; border-radius: 100px; color: var(--mint); font-size: 11px; font-weight: 800; }
+    .pill.loss { background: #563e39; color: var(--coral); border-color: #95675a; }
+    .pill.even { background: #353f52; color: #ccd6e6; border-color: #65728b; }
+    .big { font-size: clamp(57px, 7.5vw, 88px); font-weight: 850; line-height: 1; letter-spacing: -.075em; font-variant-numeric: tabular-nums; margin-bottom: 13px; }
+    .big .percent { font-size: .46em; letter-spacing: -.02em; padding-left: 2px; color: #c1dfd7; }
+    .delta { font-size: 15px; font-weight: 750; color: var(--mint); }
+    .delta.loss { color: var(--coral); }
+    .delta.even { color: #cad9ef; }
+    .delta span { color: #adc5c5; font-size: 12px; font-weight: 500; margin-left: 7px; }
+    .bars { margin-top: 31px; }
+    .bar-head { display: flex; justify-content: space-between; margin: 14px 0 8px; font-size: 12px; color: #c4d2d9; font-weight: 700; }
+    .bar-bg { height: 10px; background: #0b1720; border-radius: 999px; overflow: hidden; }
+    .bar-fill { height: 100%; width: 0; background: #738ca2; border-radius: inherit; transition: width .25s ease; }
+    .bar-fill.hs { background: linear-gradient(90deg, #51c89e, #96f4cf); }
+    .divider { height: 1px; background: #38504d; margin: 26px 0 20px; }
+    .threshold { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 12px; }
+    .threshold p { color: #9cbbb7; font-size: 11px; margin: 0 0 4px; }
+    .threshold strong { font-size: 15px; }
+    .threshold b { color: var(--mint); font-size: 29px; letter-spacing: -.04em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .more { margin-top: 17px; display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr); gap: 17px; }
+    .smallpanel { background: rgba(20, 27, 40, .83); border: 1px solid var(--border); border-radius: 20px; padding: 25px; min-width: 0; }
+    .section-heading { font-size: 14px; font-weight: 800; margin: 0 0 17px; }
+    .metric-list { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: baseline; }
+    .metric-list dt { color: var(--muted); font-size: 12px; }
+    .metric-list dd { margin: 0; font-size: 14px; font-weight: 800; font-variant-numeric: tabular-nums; text-align: right; }
+    .metric-list dd.highlight { color: var(--mint); }
+    .formula { color: #cfdbec; background: #0d1520; border: 1px solid #29384a; padding: 16px; border-radius: 10px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; line-height: 1.9; overflow-wrap: anywhere; }
+    .formula b { color: var(--mint); }
+    .hint { margin: 12px 0 0; font-size: 11px; color: var(--muted); line-height: 1.65; }
+    .custom { margin-top: 17px; }
+    .custom-input { width: 100%; background: #0d1520; border: 1px solid #344257; border-radius: 9px; font-size: 14px; padding: 12px 13px; color: white; margin-top: 8px; }
+    .custom-output { font-size: 12px; color: var(--muted); margin-top: 10px; min-height: 20px; }
+    .custom-output strong { color: var(--mint); }
+    .foot { display: flex; gap: 14px; align-items: flex-start; justify-content: space-between; border-top: 1px solid #263244; padding-top: 24px; margin-top: 30px; }
+    .foot p { margin: 0; color: var(--subtle); line-height: 1.75; font-size: 11px; max-width: 720px; }
+    .copy { flex: 0 0 auto; border-radius: 8px; background: #223e3c; border: 1px solid #447c70; color: var(--mint); padding: 11px 14px; font-weight: 800; font-size: 12px; }
+    .copy:hover { background: #2b524c; }
+    .error { color: var(--coral); min-height: 17px; font-size: 11px; margin-top: 8px; }
+    @media(max-width: 760px) {
+      .wrap { padding: 21px 16px 40px; }
+      header { margin-bottom: 43px; }
+      h1 { margin-top: 13px; }
+      .layout, .more { grid-template-columns: 1fr; }
+      .panel { padding: 22px; }
+      .result { padding-bottom: 24px; }
+      .result-top { margin-bottom: 22px; }
+      .smallpanel { padding: 22px; }
+      .foot { flex-direction: column-reverse; }
+      .copy { width: 100%; }
+    }
+    @media(prefers-reduced-motion: reduce) { *,*:before,*:after { transition-duration: 0.01ms !important; scroll-behavior: auto !important; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <a class="brand" href="#top" aria-label="계산기 처음으로">
+        <div class="logo" aria-hidden="true">M</div>
+        <div class="brand-name">메랜 실험실<span class="brand-sub">MAPLELAND EXP TOOLS</span></div>
+      </a>
+      <div class="header-meta">EXP CALCULATOR / 01</div>
+    </header>
+
+    <main id="top">
+      <div class="top">
+        <div class="eyebrow">HOLY SYMBOL · PARTY EXP</div>
+        <h1>심매미, <span>얼마나 이득일까?</span></h1>
+        <p class="lead">격수와 심매미 레벨만 넣으면 솔플 대비 경험치 효율을 바로 계산해요.</p>
+      </div>
+
+      <div class="layout">
+        <section class="panel" aria-labelledby="input-title">
+          <h2 class="panel-title" id="input-title">레벨 입력</h2>
+          <p class="panel-desc">2인 파티 · 격수 혼자 사냥 · 홀리심볼 마스터 기준</p>
+          <div class="field">
+            <div class="field-head"><label for="fighter">격수 레벨</label><span class="variable">x</span></div>
+            <div class="num-wrap">
+              <button class="step" type="button" data-target="fighter" data-step="-1" aria-label="격수 레벨 1 감소">−</button>
+              <input class="level" type="number" inputmode="numeric" id="fighter" name="fighter" value="169" min="1" max="999" step="1" />
+              <button class="step" type="button" data-target="fighter" data-step="1" aria-label="격수 레벨 1 증가">+</button>
+            </div>
+          </div>
+          <div class="field">
+            <div class="field-head"><label for="bishop">심매미 레벨</label><span class="variable">y</span></div>
+            <div class="num-wrap">
+              <button class="step" type="button" data-target="bishop" data-step="-1" aria-label="심매미 레벨 1 감소">−</button>
+              <input class="level" type="number" inputmode="numeric" id="bishop" name="bishop" value="129" min="1" max="999" step="1" />
+              <button class="step" type="button" data-target="bishop" data-step="1" aria-label="심매미 레벨 1 증가">+</button>
+            </div>
+          </div>
+          <div class="error" id="error" aria-live="polite"></div>
+          <p class="presets-label">빠른 비교</p>
+          <div class="presets" role="group" aria-label="예시 레벨 조합">
+            <button class="preset active" type="button" data-x="169" data-y="129">169 / 129</button>
+            <button class="preset" type="button" data-x="132" data-y="129">132 / 129</button>
+            <button class="preset" type="button" data-x="130" data-y="130">130 / 130</button>
+            <button class="preset" type="button" data-x="130" data-y="120">130 / 120</button>
+          </div>
+          <div class="notice"><span class="i">ⓘ</span><span>심매미가 경험치 분배 대상이며, 실제 처치 마릿수는 솔플과 같다는 가정이에요. 레벨·몬스터 조건에 따라 실제 결과가 달라질 수 있어요.</span></div>
+        </section>
+
+        <section class="panel result" aria-labelledby="result-title">
+          <div class="result-top"><h2 class="panel-title" id="result-title">솔플 대비 경험치 효율</h2><span class="pill" id="status">이득</span></div>
+          <div class="big" id="result-percent" aria-live="polite">107.86<span class="percent">%</span></div>
+          <div class="delta" id="delta">+7.86% <span>같은 마릿수 기준</span></div>
+          <div class="bars" aria-label="솔플 대비 심매미 경험치 비교">
+            <div class="bar-head"><span>솔플</span><span>100.00%</span></div><div class="bar-bg"><div class="bar-fill" id="solo-bar"></div></div>
+            <div class="bar-head"><span>심매미 파티</span><span id="party-bar-text">107.86%</span></div><div class="bar-bg"><div class="bar-fill hs" id="party-bar"></div></div>
+          </div>
+          <div class="divider"></div>
+          <div class="threshold">
+            <div><p>이 격수 레벨의 손익분기점</p><strong>심매미 최대 이득 레벨</strong></div>
+            <b id="threshold">163 Lv</b>
+          </div>
+        </section>
+      </div>
+
+      <div class="more">
+        <section class="smallpanel" aria-labelledby="breakdown-title">
+          <h2 class="section-heading" id="breakdown-title">경험치 분배 상세</h2>
+          <dl class="metric-list">
+            <dt>처치자 기본 몫</dt><dd>20%</dd>
+            <dt>레벨 비례 분배 몫</dt><dd id="levelshare">45.37%</dd>
+            <dt>2인 파티 보너스</dt><dd>× 1.10</dd>
+            <dt>홀리심볼 마스터</dt><dd>× 1.50</dd>
+            <dt>격수의 최종 획득 비율</dt><dd class="highlight" id="finalshare">107.86%</dd>
+          </dl>
+          <div class="custom">
+            <label for="solo-hour">솔플 시간당 경험치 (선택)</label>
+            <input id="solo-hour" class="custom-input" type="number" min="0" step="any" inputmode="decimal" placeholder="예: 10000000" />
+            <div class="custom-output" id="hour-result">입력하면 심매미 파티의 예상 시간당 경험치를 보여줘요.</div>
+          </div>
+        </section>
+        <section class="smallpanel" aria-labelledby="formula-title">
+          <h2 class="section-heading" id="formula-title">계산 공식</h2>
+          <div class="formula" aria-label="경험치 효율 공식">
+            E(x, y) = 1.5 × 1.1<br>
+            &nbsp; × (0.2 + 0.8 × x / (x + y))<br><br>
+            <b id="formula-numbers">= 1.65 × (0.2 + 0.8 × 169 / 298)</b><br>
+            <b id="formula-value">= 1.07859 = 107.86%</b>
+          </div>
+          <p class="hint">x = 격수 레벨, y = 심매미 레벨. 손익분기점은 y ≈ 0.970149 × x이고, E &gt; 1이면 솔플 대비 이득입니다.</p>
+          <p class="hint">기준: 솔플은 홀리심볼 미적용, 파티는 홀리심볼 30레벨 적용. 다른 경험치 배율·버프·사냥 속도 변화는 반영하지 않습니다.</p>
+        </section>
+      </div>
+
+      <footer class="foot">
+        <p>메이플랜드 커뮤니티에 공유된 파티 경험치 분배식(처치자 20% + 레벨 비례 80%), 2인 보너스 10%, 홀리심볼 50%를 이용한 이론 계산입니다. 실제 게임에서는 경험치 수령 조건, 반올림·버림, 버프 및 사냥 효율에 따라 차이가 생길 수 있습니다. 게임 공식 운영 도구는 아닙니다.</p>
+        <button class="copy" id="copy" type="button">↗ 결과 복사</button>
+      </footer>
+    </main>
+  </div>
+  <script>
+    (() => {
+      'use strict';
+      const $ = id => document.getElementById(id);
+      const fighter = $('fighter'), bishop = $('bishop'), hour = $('solo-hour');
+      const fmt = (n, digits = 2) => n.toLocaleString('ko-KR', {minimumFractionDigits: digits, maximumFractionDigits: digits});
+      const thresholdRatio = (0.8 / (1 / (1.5 * 1.1) - 0.2)) - 1;
+      let last = null;
+
+      function update() {
+        const x = Number(fighter.value), y = Number(bishop.value);
+        const valid = fighter.value.trim() !== '' && bishop.value.trim() !== '' &&
+          Number.isInteger(x) && Number.isInteger(y) && x > 0 && y > 0 && x <= 999 && y <= 999;
+        $('error').textContent = valid ? '' : '두 레벨 모두 1~999 사이의 정수를 입력해 주세요.';
+        if (!valid) {
+          last = null;
+          $('result-percent').innerHTML = '—<span class="percent">%</span>';
+          $('delta').textContent = '레벨을 입력해 주세요';
+          $('status').textContent = '계산 대기';
+          $('threshold').textContent = '—';
+          $('hour-result').textContent = '레벨 입력을 확인해 주세요.';
+          return;
+        }
+        const levelShare = 0.8 * x / (x + y);
+        const efficiency = 1.5 * 1.1 * (0.2 + levelShare);
+        const pct = efficiency * 100;
+        const change = pct - 100;
+        const maxProfitableLevel = Math.max(0, Math.ceil(thresholdRatio * x - 1e-10) - 1);
+        // 1% 이내를 사실상 동일로 표시하되, 정확한 증감은 유지합니다.
+        const kind = change > 0.000001 ? 'gain' : change < -0.000001 ? 'loss' : 'even';
+        $('result-percent').innerHTML = `${fmt(pct)}<span class="percent">%</span>`;
+        $('delta').innerHTML = `${change >= 0 ? '+' : '−'}${fmt(Math.abs(change))}% <span>같은 마릿수 기준</span>`;
+        $('delta').className = 'delta' + (kind === 'loss' ? ' loss' : kind === 'even' ? ' even' : '');
+        $('status').className = 'pill' + (kind === 'loss' ? ' loss' : kind === 'even' ? ' even' : '');
+        $('status').textContent = kind === 'gain' ? '솔플보다 이득' : kind === 'loss' ? '솔플보다 손해' : '동일';
+        const maxBar = Math.max(110, Math.ceil(Math.max(100, pct) / 10) * 10);
+        $('solo-bar').style.width = (100 / maxBar * 100) + '%';
+        $('party-bar').style.width = (Math.max(0, pct) / maxBar * 100) + '%';
+        $('party-bar-text').textContent = fmt(pct) + '%';
+        $('threshold').textContent = maxProfitableLevel + ' Lv';
+        $('levelshare').textContent = fmt(levelShare * 100) + '%';
+        $('finalshare').textContent = fmt(pct) + '%';
+        $('formula-numbers').textContent = `= 1.65 × (0.2 + 0.8 × ${x} / ${x+y})`;
+        $('formula-value').textContent = `= ${efficiency.toFixed(5)} = ${fmt(pct)}%`;
+        const solo = Number(hour.value);
+        const validHour = hour.value.trim() !== '' && Number.isFinite(solo) && solo >= 0;
+        if (validHour) {
+          const result = Math.round(solo * efficiency);
+          const difference = Math.round(solo * (efficiency - 1));
+          $('hour-result').innerHTML = `심매미 예상 <strong>${fmt(result, 0)} EXP/시간</strong><br>솔플 대비 ${difference >= 0 ? '+' : '−'}${fmt(Math.abs(difference), 0)} EXP/시간`;
+        } else {
+          $('hour-result').textContent = hour.value.trim() !== '' ? '0 이상의 숫자를 입력해 주세요.' : '입력하면 심매미 파티의 예상 시간당 경험치를 보여줘요.';
+        }
+        document.querySelectorAll('.preset').forEach(btn => {
+          btn.classList.toggle('active', Number(btn.dataset.x) === x && Number(btn.dataset.y) === y);
+        });
+        last = {x, y, pct, change, maxProfitableLevel};
+        try {
+          const url = new URL(location.href);
+          url.searchParams.set('x', String(x));
+          url.searchParams.set('y', String(y));
+          history.replaceState(null, '', url.href);
+        } catch (e) { /* file:// 및 제한된 브라우저 환경에서는 생략 */ }
+      }
+
+      try {
+        const url = new URL(location.href);
+        const x = url.searchParams.get('x'), y = url.searchParams.get('y');
+        if (x !== null && /^\d{1,3}$/.test(x) && Number(x) > 0) fighter.value = x;
+        if (y !== null && /^\d{1,3}$/.test(y) && Number(y) > 0) bishop.value = y;
+      } catch (e) { /* URL 파라미터를 읽지 못해도 계산기는 작동합니다 */ }
+      [fighter, bishop, hour].forEach(el => el.addEventListener('input', update));
+      document.querySelectorAll('.step').forEach(btn => btn.addEventListener('click', () => {
+        const field = $(btn.dataset.target);
+        const v = Number(field.value);
+        field.value = Math.min(999, Math.max(1, (Number.isFinite(v) ? v : 1) + Number(btn.dataset.step)));
+        update();
+      }));
+      document.querySelectorAll('.preset').forEach(btn => btn.addEventListener('click', () => {
+        fighter.value = btn.dataset.x;
+        bishop.value = btn.dataset.y;
+        update();
+      }));
+      $('copy').addEventListener('click', async () => {
+        if (!last) return;
+        const {x,y,pct,change,maxProfitableLevel} = last;
+        const msg = `메이플랜드 심매미 계산기\n격수 Lv.${x} / 심매미 Lv.${y}\n솔플 대비 ${fmt(pct)}% (${change >= 0 ? '+' : ''}${fmt(change)}%)\n이득인 심매미 최고 레벨: Lv.${maxProfitableLevel}\n가정: 심볼 30 / 2인 파티 / 같은 처치량`;
+        const btn = $('copy');
+        try {
+          if (navigator.clipboard?.writeText) { await navigator.clipboard.writeText(msg); }
+          else {
+            const input = document.createElement('textarea');
+            input.value = msg; input.style.position = 'fixed'; input.style.opacity = '0';
+            document.body.appendChild(input); input.select();
+            if (!document.execCommand('copy')) throw new Error('copy failed');
+            input.remove();
+          }
+          btn.textContent = '✓ 복사 완료';
+        } catch (e) {
+          btn.textContent = '복사 실패 · 다시 시도';
+        }
+        setTimeout(() => btn.textContent = '↗ 결과 복사', 1800);
+      });
+      update();
+    })();
+  </script>
+</body>
+</html>
